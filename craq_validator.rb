@@ -11,16 +11,11 @@ class CraqValidator
     return not_answered_for_all if answers.nil?
 
     questions.each_with_index do |question, i|
-      if @completed
-        validate_question_after_completed(question, i)
-        next
-      end
-
       next unless valid_question?(question, i)
 
       answer = answers[:"q#{i}"]
 
-      @completed = question[:options][answer][:complete_if_selected]
+      @completed = answer && question[:options][answer][:complete_if_selected]
     end
 
     return true if errors.empty?
@@ -52,20 +47,24 @@ class CraqValidator
     false
   end
 
-  def validate_question_after_completed(_, i)
-    return unless answers[:"q#{i}"]
+  def valid_question_after_completed?(question_index, answer)
+    return true if answer.nil?
 
-    add_error(:"q#{i}", :already_finished)
+    add_error(:"q#{question_index}", :already_finished)
+
+    false
   end
 
-  def valid_question?(question, i)
-    answer = answers[:"q#{i}"]
+  def valid_question?(question, question_index)
+    answer = answers[:"q#{question_index}"]
+
+    return valid_question_after_completed?(question_index, answer) if @completed
 
     return true if answer && question[:options][answer]
 
     error = answer.nil? ? :empty : :wrong
 
-    add_error(:"q#{i}", error)
+    add_error(:"q#{question_index}", error)
 
     false
   end
