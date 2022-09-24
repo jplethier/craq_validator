@@ -11,17 +11,16 @@ class CraqValidator
     return not_answered_for_all if answers.nil?
 
     questions.each_with_index do |question, i|
+      if @completed
+        validate_question_after_completed(question, i)
+        next
+      end
+
+      next unless valid_question?(question, i)
+
       answer = answers[:"q#{i}"]
 
-      add_error(:"q#{i}", :already_finished) && next if answer && @finished
-
-      next if @finished
-
-      add_error(:"q#{i}", :empty) && next if answer.nil?
-
-      add_error(:"q#{i}", :wrong) && next if question[:options][answer].nil?
-
-      @finished = question[:options][answer][:complete_if_selected]
+      @completed = question[:options][answer][:complete_if_selected]
     end
 
     return true if errors.empty?
@@ -49,6 +48,24 @@ class CraqValidator
     questions.size.times do |i|
       add_error(:"q#{i}", :empty)
     end
+
+    false
+  end
+
+  def validate_question_after_completed(_, i)
+    return unless answers[:"q#{i}"]
+
+    add_error(:"q#{i}", :already_finished)
+  end
+
+  def valid_question?(question, i)
+    answer = answers[:"q#{i}"]
+
+    return true if answer && question[:options][answer]
+
+    error = answer.nil? ? :empty : :wrong
+
+    add_error(:"q#{i}", error)
 
     false
   end

@@ -119,7 +119,6 @@ class CraqValidatorTest < Test::Unit::TestCase
   end
 
   def assert_valid(message: nil)
-    answers_valid?
     assert answers_valid?, (message || "expected to be valid but was not: #{@validator.errors}")
   end
 
