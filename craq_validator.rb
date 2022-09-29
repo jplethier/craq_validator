@@ -4,10 +4,25 @@ class CraqValidator
   def initialize(questions, answers)
     @questions = questions
     @answers = answers
-    @errors = {}
+    @errors = nil
   end
 
   def valid?
+    # does not validate again if it already
+    return errors.empty? unless errors.nil?
+
+    validate
+
+    errors.empty?
+  end
+
+  private
+
+  attr_reader :questions, :answers
+
+  def validate
+    @errors = {}
+
     return not_answered_for_all if answers.nil?
 
     questions.each_with_index do |question, i|
@@ -17,15 +32,7 @@ class CraqValidator
 
       @completed = answer && question[:options][answer][:complete_if_selected]
     end
-
-    return true if errors.empty?
-
-    false
   end
-
-  private
-
-  attr_reader :questions, :answers
 
   def add_error(question_number, error)
     case error
